@@ -4,8 +4,8 @@ services:
   # 前端服务
   frontend:
     build:
-      context: .
-      dockerfile: docker/Dockerfile.frontend
+      context: ./frontend-react
+      dockerfile: ../docker/Dockerfile.frontend
     container_name: sales-frontend
     ports:
       - "80:80"
@@ -31,16 +31,11 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DATABASE_URL=${DATABASE_URL}
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET=${JWT_SECRET:-your_super_secret_jwt_key_change_in_production}
       - JWT_ACCESS_EXPIRES_IN=15m
       - JWT_REFRESH_EXPIRES_IN=7d
     volumes:
       - backend_logs:/app/logs
-    depends_on:
-      - supabase-db
     networks:
       - sales-network
     restart: always
@@ -50,32 +45,9 @@ services:
       timeout: 10s
       retries: 3
 
-  # Supabase PostgreSQL（本地开发用，生产直接用 Supabase 云）
-  supabase-db:
-    image: supabase/postgres:15.1.0.117
-    container_name: sales-db
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - sales-network
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 networks:
   sales-network:
     driver: bridge
 
 volumes:
-  postgres_data:
   backend_logs:
