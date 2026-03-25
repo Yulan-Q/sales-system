@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>企业级 AI 外销系统 v2.2 - 高级筛选 + 批量操作</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+    .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+    
+    /* 头部 */
+    .header { background: white; border-radius: 10px; padding: 20px 30px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { color: #667eea; margin-bottom: 5px; }
+    .header p { color: #666; font-size: 0.9em; }
+    .user-info { text-align: right; }
+    .user-info .role { background: #667eea; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; }
+    
+    /* 卡片 */
+    .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .card h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+    
+    /* 统计 */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px; text-align: center; }
+    .stat-card h3 { font-size: 1.8em; margin-bottom: 5px; }
+    .stat-card p { opacity: 0.9; font-size: 0.85em; }
+    
+    /* 高级筛选面板 */
+    .filter-panel { background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+    .filter-panel h3 { color: #667eea; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+    .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+    .filter-item label { display: block; margin-bottom: 5px; color: #666; font-size: 0.9em; font-weight: 500; }
+    .filter-item select, .filter-item input { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9em; }
+    .filter-actions { display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end; }
+    
+    /* 批量操作工具栏 */
+    .bulk-toolbar { background: #fff7e6; border: 1px solid #ffd591; border-radius: 8px; padding: 15px; margin-bottom: 20px; display: none; }
+    .bulk-toolbar.show { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .bulk-toolbar .selected-count { font-weight: bold; color: #fa8c16; }
+    .bulk-toolbar .btn-group { display: flex; gap: 10px; }
+    
+    /* 表格 */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #f8f9fa; color: #333; font-weight: 600; }
+    tr:hover { background: #f8f9fa; }
+    .checkbox-col { width: 40px; }
+    
+    /* 状态标签 */
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 500; display: inline-block; }
+    .badge-new { background: #e3fcef; color: #00a854; }
+    .badge-contacted { background: #e6f7ff; color: #1890ff; }
+    .badge-interested { background: #fff7e6; color: #fa8c16; }
+    .badge-qualified { background: #f9f0ff; color: #722ed1; }
+    .badge-sent { background: #e6f7ff; color: #1890ff; }
+    .badge-opened { background: #f6ffed; color: #52c41a; }
+    
+    /* 评分徽章 */
+    .score-badge { display: inline-block; width: 36px; height: 36px; border-radius: 50%; text-align: center; line-height: 36px; font-weight: bold; color: white; font-size: 0.9em; }
+    .score-a { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .score-b { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .score-c { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .score-d { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    
+    /* 按钮 */
+    .btn { background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 0.9em; transition: all 0.3s; }
+    .btn:hover { background: #5568d3; transform: translateY(-1px); }
+    .btn-sm { padding: 4px 10px; font-size: 0.85em; }
+    .btn-success { background: #00a854; }
+    .btn-warning { background: #fa8c16; }
+    .btn-danger { background: #ff4d4f; }
+    .btn-outline { background: transparent; border: 1px solid #667eea; color: #667eea; }
+    .btn-ai { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    
+    /* 分页 */
+    .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 20px; }
+    .pagination button { padding: 8px 12px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 5px; }
+    .pagination button.active { background: #667eea; color: white; border-color: #667eea; }
+    .pagination button:disabled { background: #f5f5f5; cursor: not-allowed; }
+    
+    /* 模态框 */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+    .modal.show { display: flex; justify-content: center; align-items: center; }
+    .modal-content { background: white; border-radius: 10px; padding: 30px; max-width: 500px; width: 90%; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-close { background: none; border: none; font-size: 1.5em; cursor: pointer; color: #666; }
+    
+    /* Toast */
+    .toast { position: fixed; top: 20px; right: 20px; background: #00a854; color: white; padding: 15px 25px; border-radius: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 2000; display: none; }
+    .toast.show { display: block; animation: slideIn 0.3s; }
+    @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 头部 -->
+    <div class="header">
+      <div>
+        <h1>🚀 企业级 AI 外销系统 v2.2</h1>
+        <p>🆕 高级筛选 + 批量操作 | 多条件组合筛选 | 批量分配/发送邮件/标记状态</p>
+      </div>
+      <div class="user-info">
+        <div id="userInfo">加载中...</div>
+      </div>
+    </div>
+
+    <div id="app">Loading...</div>
+  </div>
+
+  <!-- 批量操作工具栏 -->
+  <div id="bulkToolbar" class="bulk-toolbar">
+    <span class="selected-count">已选择 <span id="selectedCount">0</span> 条线索</span>
+    <div class="btn-group">
+      <button class="btn btn-warning" onclick="bulkAssign()">📤 批量分配</button>
+      <button class="btn btn-ai" onclick="bulkSendEmail()">✨ 批量 AI 发邮件</button>
+      <button class="btn btn-success" onclick="bulkUpdateStatus()">✓ 批量标记状态</button>
+      <button class="btn btn-danger" onclick="bulkRecycle()">♻️ 回收到公海</button>
+      <button class="btn btn-outline" onclick="clearSelection()">取消选择</button>
+    </div>
+  </div>
+
+  <!-- 模态框 -->
+  <div id="assignModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><h2>📤 批量分配销售</h2><button class="modal-close" onclick="closeModal('assignModal')">&times;</button></div>
+      <div id="assignContent"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">✓ 操作成功</div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+    let token = null, currentUser = null;
+    let selectedLeads = new Set();
+    let filterOptions = { page: 1, limit: 20, sortBy: 'score', order: 'desc' };
+    let totalLeads = 0;
+
+    async function init() {
+      try {
+        const loginRes = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'admin', password: 'admin123' })
+        });
+        const loginData = await loginRes.json();
+        if (!loginData.success) throw new Error('登录失败');
+        
+        token = loginData.token;
+        currentUser = loginData.user;
+        document.getElementById('userInfo').innerHTML = `<div>${currentUser.username}</div><div class="role">${currentUser.role === 'admin' ? '管理员' : '销售'}</div>`;
+        
+        // 获取筛选选项
+        const filterRes = await fetch(`${API_BASE}/leads/filters`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const filterData = await filterRes.json();
+        
+        // 获取线索列表
+        await loadLeads();
+        
+        renderFilters(filterData.data);
+      } catch (error) {
+        document.getElementById('app').innerHTML = `<div class="card"><h2>❌ 错误</h2><p style="color:red">${error.message}</p></div>`;
+      }
+    }
+
+    async function loadLeads() {
+      const params = new URLSearchParams({
+        page: filterOptions.page,
+        limit: filterOptions.limit,
+        sortBy: filterOptions.sortBy,
+        order: filterOptions.order
+      });
+      
+      // 添加筛选条件
+      ['status', 'country', 'industry', 'source', 'minScore', 'maxScore'].forEach(key => {
+        const el = document.getElementById(`filter_${key}`);
+        if (el && el.value) params.append(key, el.value);
+      });
+      
+      const searchEl = document.getElementById('filter_search');
+      if (searchEl && searchEl.value) params.append('search', searchEl.value);
+      
+      const res = await fetch(`${API_BASE}/leads?${params}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      
+      totalLeads = data.pagination.total;
+      renderLeads(data.data, data.pagination);
+    }
+
+    function renderFilters(filters) {
+      const html = `
+        <div class="card">
+          <h2>🔍 高级筛选</h2>
+          <div class="filter-panel">
+            <div class="filter-grid">
+              <div class="filter-item">
+                <label>🔎 搜索</label>
+                <input type="text" id="filter_search" placeholder="公司名/邮箱">
+              </div>
+              <div class="filter-item">
+                <label>📊 状态</label>
+                <select id="filter_status">
+                  <option value="">全部</option>
+                  ${filters.statuses.map(s => `<option value="${s}">${s}</option>`).join('')}
+                </select>
+              </div>
+              <div class="filter-item">
+                <label>🌍 国家</label>
+                <select id="filter_country">
+                  <option value="">全部</option>
+                  ${filters.countries.map(c => `<option value="${c}">${c}</option>`).join('')}
+                </select>
+              </div>
+              <div class="filter-item">
+                <label>🏭 行业</label>
+                <select id="filter_industry">
+                  <option value="">全部</option>
+                  ${filters.industries.map(i => `<option value="${i}">${i}</option>`).join('')}
+                </select>
+              </div>
+              <div class="filter-item">
+                <label>📧 来源</label>
+                <select id="filter_source">
+                  <option value="">全部</option>
+                  ${filters.sources.map(s => `<option value="${s}">${s}</option>`).join('')}
+                </select>
+              </div>
+              <div class="filter-item">
+                <label>⭐ 最低评分</label>
+                <input type="number" id="filter_minScore" min="0" max="100" placeholder="0-100">
+              </div>
+              <div class="filter-item">
+                <label>⭐ 最高评分</label>
+                <input type="number" id="filter_maxScore" min="0" max="100" placeholder="0-100">
+              </div>
+              <div class="filter-item">
+                <label>📅 排序</label>
+                <select id="filter_sortBy">
+                  <option value="score">按评分</option>
+                  <option value="createdAt">按创建时间</option>
+                  <option value="lastContactAt">按最后联系</option>
+                </select>
+              </div>
+            </div>
+            <div class="filter-actions">
+              <button class="btn btn-outline" onclick="clearFilters()">清空筛选</button>
+              <button class="btn" onclick="applyFilters()">应用筛选</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('app').innerHTML = html;
+    }
+
+    function renderLeads(leads, pagination) {
+      const html = `
+        <div class="card">
+          <h2>🎯 线索列表 (${pagination.total}条)</h2>
+          
+          <table>
+            <thead>
+              <tr>
+                <th class="checkbox-col"><input type="checkbox" onchange="toggleAll(this)"></th>
+                <th>评分</th>
+                <th>公司名称</th>
+                <th>邮箱</th>
+                <th>国家</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${leads.map(lead => `
+                <tr>
+                  <td><input type="checkbox" class="lead-checkbox" value="${lead.id}" onchange="updateSelection()"></td>
+                  <td><span class="score-badge score-${getScoreLevel(lead.score)}">${lead.score}</span></td>
+                  <td>${lead.name}</td>
+                  <td>${lead.email}</td>
+                  <td>${lead.country}</td>
+                  <td><span class="badge badge-${lead.status}">${lead.status}</span></td>
+                  <td>
+                    <button class="btn btn-sm btn-ai" onclick="generateEmail(${lead.id})">AI 写信</button>
+                    <button class="btn btn-sm btn-outline" onclick="viewDetail(${lead.id})">详情</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="pagination">
+            <button ${pagination.page === 1 ? 'disabled' : ''} onclick="changePage(${pagination.page - 1})">上一页</button>
+            <button class="active">${pagination.page}</button>
+            <button ${pagination.page === pagination.totalPages ? 'disabled' : ''} onclick="changePage(${pagination.page + 1})">下一页</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('app').innerHTML += html;
+    }
+
+    function toggleAll(checkbox) {
+      document.querySelectorAll('.lead-checkbox').forEach(cb => cb.checked = checkbox.checked);
+      updateSelection();
+    }
+
+    function updateSelection() {
+      selectedLeads.clear();
+      document.querySelectorAll('.lead-checkbox:checked').forEach(cb => selectedLeads.add(parseInt(cb.value)));
+      
+      const toolbar = document.getElementById('bulkToolbar');
+      if (selectedLeads.size > 0) {
+        toolbar.classList.add('show');
+        document.getElementById('selectedCount').textContent = selectedLeads.size;
+      } else {
+        toolbar.classList.remove('show');
+      }
+    }
+
+    function clearSelection() {
+      selectedLeads.clear();
+      document.querySelectorAll('.lead-checkbox').forEach(cb => cb.checked = false);
+      document.getElementById('bulkToolbar').classList.remove('show');
+    }
+
+    async function bulkAssign() {
+      const content = `
+        <p style="margin-bottom: 15px">将 ${selectedLeads.size} 条线索分配给：</p>
+        <select id="assignTo" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:5px;margin-bottom:15px">
+          <option value="1">sales1</option>
+          <option value="2">sales2</option>
+        </select>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-success" onclick="confirmAssign()">确认分配</button>
+          <button class="btn btn-outline" onclick="closeModal('assignModal')">取消</button>
+        </div>
+      `;
+      document.getElementById('assignContent').innerHTML = content;
+      document.getElementById('assignModal').classList.add('show');
+    }
+
+    async function confirmAssign() {
+      const assignedTo = document.getElementById('assignTo').value;
+      const res = await fetch(`${API_BASE}/leads/bulk/assign`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadIds: Array.from(selectedLeads), assignedTo })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`✓ ${data.message}`);
+        closeModal('assignModal');
+        clearSelection();
+        loadLeads();
+      }
+    }
+
+    async function bulkSendEmail() {
+      if (!confirm(`确定要给 ${selectedLeads.size} 条线索发送 AI 开发信吗？`)) return;
+      
+      const res = await fetch(`${API_BASE}/leads/bulk/send-email`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadIds: Array.from(selectedLeads), templateType: 'cold_email' })
+      });
+      const data = await res.json();
+      if (data.success) showToast(`✓ ${data.message}`);
+      clearSelection();
+      loadLeads();
+    }
+
+    async function bulkUpdateStatus() {
+      const status = prompt('输入新状态 (new/contacted/interested/qualified):', 'contacted');
+      if (!status) return;
+      
+      const res = await fetch(`${API_BASE}/leads/bulk/update-status`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadIds: Array.from(selectedLeads), status })
+      });
+      const data = await res.json();
+      if (data.success) showToast(`✓ ${data.message}`);
+      clearSelection();
+      loadLeads();
+    }
+
+    async function bulkRecycle() {
+      if (!confirm(`确定将 ${selectedLeads.size} 条线索回收到公海池吗？`)) return;
+      
+      const res = await fetch(`${API_BASE}/leads/bulk/recycle`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadIds: Array.from(selectedLeads) })
+      });
+      const data = await res.json();
+      if (data.success) showToast(`✓ ${data.message}`);
+      clearSelection();
+      loadLeads();
+    }
+
+    function getScoreLevel(score) {
+      if (score >= 80) return 'a';
+      if (score >= 60) return 'b';
+      if (score >= 40) return 'c';
+      return 'd';
+    }
+
+    function applyFilters() {
+      filterOptions.page = 1;
+      loadLeads();
+    }
+
+    function clearFilters() {
+      document.querySelectorAll('.filter-panel input, .filter-panel select').forEach(el => {
+        if (el.id !== 'filter_sortBy') el.value = '';
+      });
+      filterOptions.page = 1;
+      loadLeads();
+    }
+
+    function changePage(page) {
+      filterOptions.page = page;
+      loadLeads();
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('show');
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function generateEmail(id) { alert('AI 写信功能开发中...'); }
+    function viewDetail(id) { alert('详情页面开发中...'); }
+
+    init();
+  </script>
+</body>
+</html>
