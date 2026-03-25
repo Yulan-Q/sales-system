@@ -1,116 +1,95 @@
+# Docker Compose 配置文件
 version: '3.8'
 
 services:
-  # ============================================
-  # 主应用服务
-  # ============================================
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: cross-border-sales-app
+  # Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: sales-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+    networks:
+      - sales-network
     restart: always
+
+  # 后端 API 服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: sales-backend
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DATABASE_PATH=/app/database/prod.sqlite
-      - LOG_FILE=/app/logs/app.log
-      - APIFY_TOKEN=${APIFY_TOKEN}
-      - BREVO_API_KEY=${BREVO_API_KEY}
-      - JWT_SECRET=${JWT_SECRET:-change_this_secret_in_production}
-      - COMPANY_NAME=${COMPANY_NAME:-My Company}
+      - JWT_SECRET=${JWT_SECRET:-your_super_secret_jwt_key_change_in_production}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://sales_user:sales_password@postgres:5432/sales_db}
+      - APIFY_TOKEN=${APIFY_TOKEN:-demo_token}
+      - BREVO_API_KEY=${BREVO_API_KEY:-demo_key}
     volumes:
-      - app-data:/app/database
-      - app-logs:/app/logs
-      - app-uploads:/app/uploads
-    networks:
-      - app-network
+      - ./backend:/app
+      - backend_logs:/app/logs
     depends_on:
-      - nginx
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # ============================================
-  # Nginx 反向代理
-  # ============================================
-  nginx:
-    image: nginx:alpine
-    container_name: cross-border-sales-nginx
+      - postgres
+    networks:
+      - sales-network
     restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - nginx-cache:/var/cache/nginx
-    networks:
-      - app-network
-    depends_on:
-      - app
     healthcheck:
-      test: ["CMD", "nginx", "-t"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # ============================================
-  # PostgreSQL（可选，替代 SQLite）
-  # ============================================
+  # PostgreSQL 数据库
   postgres:
     image: postgres:15-alpine
-    container_name: cross-border-sales-db
-    restart: always
+    container_name: sales-postgres
+    ports:
+      - "5432:5432"
     environment:
-      - POSTGRES_DB=cross_border_sales
-      - POSTGRES_USER=${DB_USER:-sales_user}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-change_this_password}
+      - POSTGRES_USER=${POSTGRES_USER:-sales_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-sales_password}
+      - POSTGRES_DB=${POSTGRES_DB:-sales_db}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - app-network
-    profiles:
-      - postgres  # 默认不启动，使用 --profile postgres 启用
+      - sales-network
+    restart: always
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-sales_user}"]
+      test: ["CMD-SHELL", "pg_isready -U sales_user"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ============================================
-  # Watchtower（自动更新）
-  # ============================================
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: cross-border-sales-watchtower
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+  # PgAdmin 数据库管理
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: sales-pgadmin
+    ports:
+      - "5050:80"
     environment:
-      - WATCHTOWER_POLL_INTERVAL=86400  # 每天检查一次
-      - WATCHTOWER_CLEANUP=true
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@example.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
     networks:
-      - app-network
-    profiles:
-      - auto-update  # 可选功能
-
-volumes:
-  app-data:
-    driver: local
-  app-logs:
-    driver: local
-  app-uploads:
-    driver: local
-  nginx-cache:
-    driver: local
-  postgres-data:
-    driver: local
+      - sales-network
+    restart: always
 
 networks:
-  app-network:
+  sales-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+  backend_logs:
+  pgadmin_data:
