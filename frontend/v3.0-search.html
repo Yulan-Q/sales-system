@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>企业级 AI 外销系统 v3.0 - 实时搜索</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    
+    .header { background: white; border-radius: 10px; padding: 20px 30px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .header h1 { color: #667eea; margin-bottom: 5px; }
+    .header .badge { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; margin-left: 10px; }
+    
+    .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .card h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+    
+    .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+    .search-box input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; }
+    .search-box input:focus { outline: none; border-color: #667eea; }
+    .btn { background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1em; }
+    .btn:hover { background: #5568d3; }
+    .btn-ai { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    
+    .news-item { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #667eea; }
+    .news-item h3 { color: #667eea; font-size: 1.1em; margin-bottom: 8px; }
+    .news-item p { color: #666; font-size: 0.9em; line-height: 1.6; }
+    .news-item .meta { color: #999; font-size: 0.85em; margin-top: 10px; }
+    .news-item a { color: #667eea; text-decoration: none; }
+    .news-item a:hover { text-decoration: underline; }
+    
+    .decision-maker { background: #fff7e6; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #fa8c16; }
+    .decision-maker h3 { color: #fa8c16; font-size: 1.1em; margin-bottom: 8px; }
+    .decision-maker .info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px; }
+    .decision-maker .info div { background: white; padding: 8px; border-radius: 5px; }
+    
+    .loading { text-align: center; padding: 40px; color: white; font-size: 1.2em; }
+    .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid white; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+    .stat-card h3 { font-size: 2em; margin-bottom: 5px; }
+    .stat-card p { opacity: 0.9; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔍 企业级 AI 外销系统 v3.0 <span class="badge">实时搜索增强</span></h1>
+      <p>🆕 Tavily 实时搜索 | 决策人挖掘 | 邮箱验证 | 网站状态检测</p>
+    </div>
+
+    <div id="app"><div class="loading"><div class="spinner"></div>加载中...</div></div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+    let token = null;
+
+    async function init() {
+      try {
+        const loginRes = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'admin', password: 'admin123' })
+        });
+        const loginData = await loginRes.json();
+        token = loginData.token;
+        
+        render();
+      } catch (error) {
+        document.getElementById('app').innerHTML = `<div class="card"><h2>❌ 错误</h2><p>${error.message}</p></div>`;
+      }
+    }
+
+    function render() {
+      const html = `
+        <!-- 统计卡片 -->
+        <div class="card">
+          <h2>📊 实时搜索能力</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>🔍</h3>
+              <p>Tavily 搜索</p>
+            </div>
+            <div class="stat-card">
+              <h3>👥</h3>
+              <p>决策人挖掘</p>
+            </div>
+            <div class="stat-card">
+              <h3>✓</h3>
+              <p>邮箱验证</p>
+            </div>
+            <div class="stat-card">
+              <h3>🌐</h3>
+              <p>网站检测</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 实时搜索 -->
+        <div class="card">
+          <h2>🔍 实时公司新闻搜索</h2>
+          <div class="search-box">
+            <input type="text" id="companyName" placeholder="输入公司名称，如：ABC Trading Ltd">
+            <input type="text" id="country" placeholder="国家（可选）" style="flex:0.5">
+            <button class="btn btn-ai" onclick="searchNews()">✨ 搜索最新新闻</button>
+          </div>
+          <div id="newsResults"></div>
+        </div>
+
+        <!-- 决策人挖掘 -->
+        <div class="card">
+          <h2>👥 决策人挖掘</h2>
+          <div class="search-box">
+            <input type="text" id="dmCompany" placeholder="输入公司名称">
+            <input type="text" id="dmWebsite" placeholder="公司网站（可选）" style="flex:0.5">
+            <button class="btn btn-ai" onclick="searchDecisionMakers()">🎯 挖掘决策人</button>
+          </div>
+          <div id="dmResults"></div>
+        </div>
+
+        <!-- 邮箱验证 -->
+        <div class="card">
+          <h2>✓ 邮箱有效性验证</h2>
+          <div class="search-box">
+            <input type="email" id="emailToVerify" placeholder="输入邮箱地址，如：info@company.com">
+            <button class="btn btn-ai" onclick="verifyEmail()">🔍 验证邮箱</button>
+          </div>
+          <div id="emailResults"></div>
+        </div>
+
+        <!-- 网站状态 -->
+        <div class="card">
+          <h2>🌐 网站状态检测</h2>
+          <div class="search-box">
+            <input type="url" id="websiteUrl" placeholder="输入网址，如：https://example.com">
+            <button class="btn btn-ai" onclick="checkWebsite()">📊 检查状态</button>
+          </div>
+          <div id="websiteResults"></div>
+        </div>
+      `;
+      document.getElementById('app').innerHTML = html;
+    }
+
+    async function searchNews() {
+      const companyName = document.getElementById('companyName').value;
+      const country = document.getElementById('country').value;
+      
+      if (!companyName) { alert('请输入公司名称'); return; }
+      
+      document.getElementById('newsResults').innerHTML = '<div class="loading"><div class="spinner"></div>搜索中...</div>';
+      
+      try {
+        const res = await fetch(`${API_BASE}/search/company-news`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ companyName, country, days: 30 })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          const html = `
+            <div style="margin-bottom: 15px; color: #666;">
+              找到 ${data.data.total} 条新闻 | 搜索时间：${data.data.searchTime} 
+              ${data.data.isDemo ? '<span style="color:#fa8c16">（演示数据）</span>' : ''}
+            </div>
+            ${data.data.results.map(news => `
+              <div class="news-item">
+                <h3><a href="${news.url}" target="_blank">${news.title}</a></h3>
+                <p>${news.content}</p>
+                <div class="meta">
+                  <span>📅 ${new Date(news.publishedDate).toLocaleDateString('zh-CN')}</span> | 
+                  <span>📰 ${news.source}</span>
+                </div>
+              </div>
+            `).join('')}
+          `;
+          document.getElementById('newsResults').innerHTML = html;
+        }
+      } catch (error) {
+        document.getElementById('newsResults').innerHTML = `<div class="news-item" style="border-left-color: #ff4d4f"><h3>❌ 搜索失败</h3><p>${error.message}</p></div>`;
+      }
+    }
+
+    async function searchDecisionMakers() {
+      const companyName = document.getElementById('dmCompany').value;
+      const website = document.getElementById('dmWebsite').value;
+      
+      if (!companyName) { alert('请输入公司名称'); return; }
+      
+      document.getElementById('dmResults').innerHTML = '<div class="loading"><div class="spinner"></div>挖掘中...</div>';
+      
+      try {
+        const res = await fetch(`${API_BASE}/search/decision-makers`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ companyName, website })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          const html = `
+            <div style="margin-bottom: 15px; color: #666;">
+              找到 ${data.data.total} 位决策人 | 搜索时间：${data.data.searchTime}
+              ${data.data.isDemo ? '<span style="color:#fa8c16">（演示数据）</span>' : ''}
+            </div>
+            ${data.data.decisionMakers.map(dm => `
+              <div class="decision-maker">
+                <h3>👤 ${dm.name} - ${dm.title}</h3>
+                <div class="info">
+                  <div><strong>📧 邮箱:</strong><br>${dm.email}</div>
+                  <div><strong>📱 电话:</strong><br>${dm.phone || '未提供'}</div>
+                  <div><strong>💼 LinkedIn:</strong><br><a href="${dm.linkedin}" target="_blank">查看主页</a></div>
+                  <div><strong>🎯 可信度:</strong><br>${Math.round(dm.confidence * 100)}%</div>
+                </div>
+              </div>
+            `).join('')}
+          `;
+          document.getElementById('dmResults').innerHTML = html;
+        }
+      } catch (error) {
+        document.getElementById('dmResults').innerHTML = `<div class="decision-maker" style="border-left-color: #ff4d4f"><h3>❌ 搜索失败</h3><p>${error.message}</p></div>`;
+      }
+    }
+
+    async function verifyEmail() {
+      const email = document.getElementById('emailToVerify').value;
+      
+      if (!email) { alert('请输入邮箱地址'); return; }
+      
+      document.getElementById('emailResults').innerHTML = '<div class="loading"><div class="spinner"></div>验证中...</div>';
+      
+      try {
+        const res = await fetch(`${API_BASE}/verify/email`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          const statusColor = data.data.valid ? '#52c41a' : '#ff4d4f';
+          const html = `
+            <div class="decision-maker" style="border-left-color: ${statusColor}">
+              <h3 style="color: ${statusColor}">${data.data.valid ? '✓ 邮箱有效' : '⚠ 邮箱可能无效'}</h3>
+              <div class="info">
+                <div><strong>邮箱:</strong><br>${data.data.email}</div>
+                <div><strong>域名:</strong><br>${data.data.domain}</div>
+                <div><strong>格式:</strong><br>${data.data.formatValid ? '✓ 正确' : '✗ 错误'}</div>
+                <div><strong>类型:</strong><br>${data.data.isFreeEmail ? '免费邮箱' : '公司邮箱'}</div>
+                <div><strong>可信度:</strong><br>${Math.round(data.data.confidence * 100)}%</div>
+              </div>
+              ${data.data.suggestions.length > 0 ? `<div style="margin-top: 10px; color: #fa8c16">💡 建议：${data.data.suggestions.join(', ')}</div>` : ''}
+            </div>
+          `;
+          document.getElementById('emailResults').innerHTML = html;
+        }
+      } catch (error) {
+        document.getElementById('emailResults').innerHTML = `<div class="decision-maker" style="border-left-color: #ff4d4f"><h3>❌ 验证失败</h3><p>${error.message}</p></div>`;
+      }
+    }
+
+    async function checkWebsite() {
+      const url = document.getElementById('websiteUrl').value;
+      
+      if (!url) { alert('请输入网址'); return; }
+      
+      document.getElementById('websiteResults').innerHTML = '<div class="loading"><div class="spinner"></div>检查中...</div>';
+      
+      try {
+        const res = await fetch(`${API_BASE}/verify/website-status?${new URLSearchParams({ url })}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          const statusColor = data.data.reachable ? '#52c41a' : '#ff4d4f';
+          const html = `
+            <div class="decision-maker" style="border-left-color: ${statusColor}">
+              <h3 style="color: ${statusColor}">${data.data.reachable ? '✓ 网站可访问' : '✗ 网站无法访问'}</h3>
+              <div class="info">
+                <div><strong>URL:</strong><br>${data.data.url}</div>
+                <div><strong>状态码:</strong><br>${data.data.status} ${data.data.statusText}</div>
+                <div><strong>加载时间:</strong><br>${data.data.loadTime.toFixed(2)}s</div>
+                <div><strong>SSL:</strong><br>${data.data.ssl ? '✓ HTTPS' : '✗ HTTP'}</div>
+                <div><strong>检查时间:</strong><br>${new Date(data.data.lastChecked).toLocaleString('zh-CN')}</div>
+              </div>
+            </div>
+          `;
+          document.getElementById('websiteResults').innerHTML = html;
+        }
+      } catch (error) {
+        document.getElementById('websiteResults').innerHTML = `<div class="decision-maker" style="border-left-color: #ff4d4f"><h3>❌ 检查失败</h3><p>${error.message}</p></div>`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
