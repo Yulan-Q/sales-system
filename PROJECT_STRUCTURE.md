@@ -1,0 +1,118 @@
+# Cross-Border Sales Agent - 项目结构
+
+```
+cross-border-sales-agent/
+├── README.md                    # 项目说明
+├── package.json                 # 依赖配置
+├── .env.example                 # 环境变量模板
+├── .env                         # 环境变量（不提交）
+│
+├── backend/                     # 后端代码
+│   ├── src/
+│   │   ├── index.js            # 入口文件
+│   │   ├── config/
+│   │   │   ├── database.js     # 数据库配置
+│   │   │   ├── apify.js        # Apify 配置
+│   │   │   └── brevo.js        # Brevo 配置
+│   │   ├── routes/
+│   │   │   ├── index.js        # 路由总入口
+│   │   │   ├── leads.js        # 线索相关接口
+│   │   │   ├── emails.js       # 邮件相关接口
+│   │   │   ├── campaigns.js    # 活动相关接口
+│   │   │   └── crm.js          # CRM 相关接口
+│   │   ├── controllers/
+│   │   │   ├── leadsController.js
+│   │   │   ├── emailsController.js
+│   │   │   ├── campaignsController.js
+│   │   │   └── crmController.js
+│   │   ├── services/
+│   │   │   ├── apifyService.js     # Apify 调用服务
+│   │   │   ├── brevoService.js     # Brevo 调用服务
+│   │   │   ├── emailGenerator.js   # AI 邮件生成
+│   │   │   └── crmService.js       # CRM 逻辑
+│   │   ├── models/
+│   │   │   ├── Lead.js         # 线索模型
+│   │   │   ├── Email.js        # 邮件模型
+│   │   │   ├── Campaign.js     # 活动模型
+│   │   │   └── Company.js      # 公司配置模型
+│   │   ├── middleware/
+│   │   │   ├── auth.js         # 认证中间件
+│   │   │   └── validator.js    # 数据验证
+│   │   └── utils/
+│   │       ├── logger.js       # 日志工具
+│   │       └── helpers.js      # 辅助函数
+│   │
+│   ├── tests/                  # 测试文件
+│   └── package.json
+│
+├── frontend/                   # 前端代码
+│   ├── src/
+│   │   ├── main.js            # 入口文件
+│   │   ├── App.vue            # 根组件
+│   │   ├── api/
+│   │   │   ├── index.js       # API 客户端
+│   │   │   ├── leads.js       # 线索 API
+│   │   │   ├── emails.js      # 邮件 API
+│   │   │   └── crm.js         # CRM API
+│   │   ├── components/
+│   │   │   ├── common/
+│   │   │   │   ├── Header.vue
+│   │   │   │   ├── Sidebar.vue
+│   │   │   │   └── Loading.vue
+│   │   │   ├── leads/
+│   │   │   │   ├── LeadSearch.vue      # 线索搜索
+│   │   │   │   ├── LeadList.vue        # 线索列表
+│   │   │   │   ├── LeadDetail.vue      # 线索详情
+│   │   │   │   └── LeadExport.vue      # 线索导出
+│   │   │   ├── emails/
+│   │   │   │   ├── EmailGenerator.vue  # 邮件生成
+│   │   │   │   ├── EmailList.vue       # 邮件列表
+│   │   │   │   ├── EmailTemplate.vue   # 邮件模板
+│   │   │   │   └── EmailStats.vue      # 邮件统计
+│   │   │   ├── campaigns/
+│   │   │   │   ├── CampaignList.vue
+│   │   │   │   ├── CampaignCreate.vue
+│   │   │   │   └── CampaignDetail.vue
+│   │   │   └── crm/
+│   │   │       ├── CustomerList.vue
+│   │   │       ├── CustomerDetail.vue
+│   │   │       ├── SalesFunnel.vue     # 销售漏斗
+│   │   │       └── PerformanceStats.vue # 业绩统计
+│   │   ├── views/
+│   │   │   ├── Dashboard.vue           # 仪表盘
+│   │   │   ├── Leads.vue               # 线索管理页
+│   │   │   ├── Emails.vue              # 邮件管理页
+│   │   │   ├── Campaigns.vue           # 活动管理页
+│   │   │   ├── CRM.vue                 # CRM 页
+│   │   │   └── Settings.vue            # 设置页
+│   │   ├── stores/
+│   │   │   ├── user.js          # 用户状态
+│   │   │   ├── leads.js         # 线索状态
+│   │   │   └── settings.js      # 配置状态
+│   │   ├── router/
+│   │   │   └── index.js         # 路由配置
+│   │   ├── styles/
+│   │   │   └── main.scss        # 全局样式
+│   │   └── utils/
+│   │       ├── format.js        # 格式化工具
+│   │       └── constants.js     # 常量定义
+│   │
+│   ├── public/
+│   │   └── index.html
+│   ├── package.json
+│   └── vite.config.js
+│
+├── database/
+│   ├── schema.sql             # 数据库表结构
+│   └── seeds.sql              # 初始数据
+│
+├── docs/
+│   ├── API.md                 # API 接口文档
+│   ├── DEPLOY.md              # 部署指南
+│   └── USER_GUIDE.md          # 用户手册
+│
+└── scripts/
+    ├── setup.sh               # 初始化脚本
+    ├── dev.sh                 # 开发环境启动
+    └── prod.sh                # 生产环境部署
+```

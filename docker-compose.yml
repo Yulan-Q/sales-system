@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # 主应用服务
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cross-border-sales-app
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_PATH=/app/database/prod.sqlite
+      - LOG_FILE=/app/logs/app.log
+      - APIFY_TOKEN=${APIFY_TOKEN}
+      - BREVO_API_KEY=${BREVO_API_KEY}
+      - JWT_SECRET=${JWT_SECRET:-change_this_secret_in_production}
+      - COMPANY_NAME=${COMPANY_NAME:-My Company}
+    volumes:
+      - app-data:/app/database
+      - app-logs:/app/logs
+      - app-uploads:/app/uploads
+    networks:
+      - app-network
+    depends_on:
+      - nginx
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================
+  # Nginx 反向代理
+  # ============================================
+  nginx:
+    image: nginx:alpine
+    container_name: cross-border-sales-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx-cache:/var/cache/nginx
+    networks:
+      - app-network
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # PostgreSQL（可选，替代 SQLite）
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: cross-border-sales-db
+    restart: always
+    environment:
+      - POSTGRES_DB=cross_border_sales
+      - POSTGRES_USER=${DB_USER:-sales_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-change_this_password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - app-network
+    profiles:
+      - postgres  # 默认不启动，使用 --profile postgres 启用
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-sales_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Watchtower（自动更新）
+  # ============================================
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: cross-border-sales-watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=86400  # 每天检查一次
+      - WATCHTOWER_CLEANUP=true
+    networks:
+      - app-network
+    profiles:
+      - auto-update  # 可选功能
+
+volumes:
+  app-data:
+    driver: local
+  app-logs:
+    driver: local
+  app-uploads:
+    driver: local
+  nginx-cache:
+    driver: local
+  postgres-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

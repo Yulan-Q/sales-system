@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>企业级 AI 外销系统 - 演示版</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { background: white; border-radius: 10px; padding: 20px 30px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .header h1 { color: #667eea; margin-bottom: 10px; }
+    .header p { color: #666; }
+    .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .card h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+    .stat-card h3 { font-size: 2em; margin-bottom: 5px; }
+    .stat-card p { opacity: 0.9; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #f8f9fa; color: #333; font-weight: 600; }
+    tr:hover { background: #f8f9fa; }
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 500; }
+    .badge-new { background: #e3fcef; color: #00a854; }
+    .badge-contacted { background: #e6f7ff; color: #1890ff; }
+    .badge-interested { background: #fff7e6; color: #fa8c16; }
+    .badge-qualified { background: #f9f0ff; color: #722ed1; }
+    .btn { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; }
+    .btn:hover { background: #5568d3; }
+    .api-test { background: #2d3748; color: #48bb78; padding: 15px; border-radius: 5px; font-family: monospace; margin-top: 10px; }
+    .success { color: #48bb78; }
+    .loading { text-align: center; padding: 40px; color: white; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚀 企业级 AI 外销系统 - 演示版</h1>
+      <p>后端服务已启动 | 测试账号：demo / demo123</p>
+    </div>
+
+    <div id="app">
+      <div class="loading">正在加载...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+
+    async function init() {
+      try {
+        // 测试健康检查
+        const health = await fetch(`${API_BASE}/health`);
+        const healthData = await health.json();
+
+        // 登录
+        const loginRes = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'demo', password: 'demo123' })
+        });
+        const loginData = await loginRes.json();
+
+        // 获取统计数据
+        const statsRes = await fetch(`${API_BASE}/dashboard/stats`);
+        const statsData = await statsRes.json();
+
+        // 获取线索列表
+        const leadsRes = await fetch(`${API_BASE}/leads`);
+        const leadsData = await leadsRes.json();
+
+        // 获取营销活动
+        const campaignsRes = await fetch(`${API_BASE}/campaigns`);
+        const campaignsData = await campaignsRes.json();
+
+        render(healthData, loginData, statsData.data, leadsData.data, campaignsData.data);
+      } catch (error) {
+        document.getElementById('app').innerHTML = `
+          <div class="card">
+            <h2>❌ 错误</h2>
+            <p style="color: red;">${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function render(health, login, stats, leads, campaigns) {
+      const html = `
+        <div class="card">
+          <h2>✅ 系统状态</h2>
+          <div class="api-test">
+            <div>后端版本：${health.version}</div>
+            <div>登录状态：<span class="success">成功</span></div>
+            <div>用户：${login.user.username} (${login.user.company})</div>
+            <div>Token: ${login.token.substring(0, 30)}...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>📊 数据统计</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>${stats.totalLeads}</h3>
+              <p>总线索数</p>
+            </div>
+            <div class="stat-card">
+              <h3>${stats.newLeads}</h3>
+              <p>新增线索</p>
+            </div>
+            <div class="stat-card">
+              <h3>${stats.activeCampaigns}/${stats.totalCampaigns}</h3>
+              <p>进行中活动</p>
+            </div>
+            <div class="stat-card">
+              <h3>${stats.avgOpenRate}%</h3>
+              <p>平均打开率</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>🎯 线索列表</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>公司名称</th>
+                <th>邮箱</th>
+                <th>国家</th>
+                <th>状态</th>
+                <th>来源</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${leads.map(lead => `
+                <tr>
+                  <td>${lead.id}</td>
+                  <td>${lead.name}</td>
+                  <td>${lead.email}</td>
+                  <td>${lead.country}</td>
+                  <td><span class="badge badge-${lead.status}">${lead.status}</span></td>
+                  <td>${lead.source}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>📧 营销活动</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>活动名称</th>
+                <th>状态</th>
+                <th>线索数</th>
+                <th>已发送</th>
+                <th>打开率</th>
+                <th>回复率</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${campaigns.map(c => `
+                <tr>
+                  <td>${c.id}</td>
+                  <td>${c.name}</td>
+                  <td><span class="badge badge-${c.status === 'active' ? 'new' : 'contacted'}">${c.status}</span></td>
+                  <td>${c.totalLeads}</td>
+                  <td>${c.sentEmails}</td>
+                  <td>${c.openRate}%</td>
+                  <td>${c.replyRate}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>🎉 演示成功！</h2>
+          <p>后端服务正常运行，所有 API 端点都已就绪。</p>
+          <p style="margin-top: 10px;"><strong>下一步：</strong></p>
+          <ul style="margin-left: 20px; margin-top: 5px;">
+            <li>注册 Apify 和 Brevo API Keys</li>
+            <li>更新 backend/.env 配置文件</li>
+            <li>启动完整版后端服务</li>
+            <li>部署前端 Vue 应用</li>
+          </ul>
+          <button class="btn" onclick="alert('演示版功能有限，完整版需要部署完整后端代码')" style="margin-top: 15px;">
+            测试更多功能
+          </button>
+        </div>
+      `;
+      document.getElementById('app').innerHTML = html;
+    }
+
+    // 启动
+    init();
+  </script>
+</body>
+</html>

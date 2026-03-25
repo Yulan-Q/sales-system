@@ -1,0 +1,40 @@
+# Docker 相关
+node_modules
+npm-debug.log
+.git
+.gitignore
+*.md
+.env
+.env.local
+.env.*.local
+
+# 构建产物
+dist
+build
+*.log
+
+# 数据库
+*.sqlite
+*.db
+
+# 日志
+logs
+*.log
+
+# 上传文件
+uploads
+temp
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 测试
+coverage
+.nyc_output

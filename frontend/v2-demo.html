@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>企业级 AI 外销系统 v2.0 - 核心版</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    
+    /* 头部 */
+    .header { background: white; border-radius: 10px; padding: 20px 30px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { color: #667eea; margin-bottom: 5px; }
+    .header p { color: #666; font-size: 0.9em; }
+    .user-info { text-align: right; }
+    .user-info .role { background: #667eea; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; display: inline-block; }
+    
+    /* 卡片样式 */
+    .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .card h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #667eea; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    
+    /* 统计卡片 */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+    .stat-card h3 { font-size: 2em; margin-bottom: 5px; }
+    .stat-card p { opacity: 0.9; font-size: 0.9em; }
+    
+    /* 表格样式 */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #f8f9fa; color: #333; font-weight: 600; }
+    tr:hover { background: #f8f9fa; }
+    
+    /* 状态标签 */
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 500; display: inline-block; }
+    .badge-new { background: #e3fcef; color: #00a854; }
+    .badge-contacted { background: #e6f7ff; color: #1890ff; }
+    .badge-interested { background: #fff7e6; color: #fa8c16; }
+    .badge-qualified { background: #f9f0ff; color: #722ed1; }
+    .badge-invalid { background: #f5f5f5; color: #666; }
+    
+    /* 评分徽章 */
+    .score-badge { 
+      display: inline-block; 
+      width: 36px; 
+      height: 36px; 
+      border-radius: 50%; 
+      text-align: center; 
+      line-height: 36px; 
+      font-weight: bold;
+      color: white;
+      font-size: 0.9em;
+    }
+    .score-a { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .score-b { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .score-c { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .score-d { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    
+    /* 按钮 */
+    .btn { background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-size: 0.9em; transition: all 0.3s; }
+    .btn:hover { background: #5568d3; transform: translateY(-1px); }
+    .btn-sm { padding: 4px 10px; font-size: 0.85em; }
+    .btn-success { background: #00a854; }
+    .btn-success:hover { background: #008f45; }
+    .btn-outline { background: transparent; border: 1px solid #667eea; color: #667eea; }
+    .btn-outline:hover { background: #667eea; color: white; }
+    
+    /* 筛选工具栏 */
+    .toolbar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .toolbar select, .toolbar input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9em; }
+    
+    /* AI 生成按钮 */
+    .btn-ai { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-ai::after {
+      content: '✨';
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    
+    /* 模态框 */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+    .modal.show { display: flex; justify-content: center; align-items: center; }
+    .modal-content { background: white; border-radius: 10px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-close { background: none; border: none; font-size: 1.5em; cursor: pointer; color: #666; }
+    
+    /* 邮件预览 */
+    .email-preview { background: #f8f9fa; padding: 20px; border-radius: 5px; border-left: 4px solid #667eea; white-space: pre-wrap; font-family: Georgia, serif; line-height: 1.6; }
+    .email-subject { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; color: #333; }
+    
+    /* 评分详情 */
+    .score-breakdown { display: grid; gap: 10px; margin-top: 15px; }
+    .score-item { display: flex; justify-content: space-between; padding: 8px; background: #f8f9fa; border-radius: 5px; }
+    .score-item span:first-child { color: #666; }
+    .score-item span:last-child { font-weight: bold; color: #667eea; }
+    
+    /* 公海池标签 */
+    .public-pool-tag { background: #fff7e6; color: #fa8c16; padding: 2px 8px; border-radius: 3px; font-size: 0.8em; margin-left: 5px; }
+    
+    /* 加载动画 */
+    .loading { text-align: center; padding: 40px; color: white; font-size: 1.2em; }
+    .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid white; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    /* 成功提示 */
+    .toast { position: fixed; top: 20px; right: 20px; background: #00a854; color: white; padding: 15px 25px; border-radius: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 2000; display: none; }
+    .toast.show { display: block; animation: slideIn 0.3s; }
+    @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 头部 -->
+    <div class="header">
+      <div>
+        <h1>🚀 企业级 AI 外销系统 v2.0</h1>
+        <p>核心功能：AI 邮件生成 | 智能线索评分 | 公海池机制</p>
+      </div>
+      <div class="user-info">
+        <div id="userInfo">加载中...</div>
+      </div>
+    </div>
+
+    <div id="app"><div class="loading"><div class="spinner"></div>正在加载...</div></div>
+  </div>
+
+  <!-- AI 邮件生成模态框 -->
+  <div id="emailModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>✨ AI 生成开发信</h2>
+        <button class="modal-close" onclick="closeModal('emailModal')">&times;</button>
+      </div>
+      <div id="emailContent"></div>
+      <div style="margin-top: 20px; display: flex; gap: 10px;">
+        <button class="btn btn-success" onclick="alert('邮件已发送到草稿箱！')">✓ 使用此邮件</button>
+        <button class="btn btn-outline" onclick="closeModal('emailModal')">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 评分详情模态框 -->
+  <div id="scoreModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🎯 线索评分详情</h2>
+        <button class="modal-close" onclick="closeModal('scoreModal')">&times;</button>
+      </div>
+      <div id="scoreContent"></div>
+    </div>
+  </div>
+
+  <!-- 成功提示 -->
+  <div id="toast" class="toast">✓ 操作成功</div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+    let token = null;
+    let currentUser = null;
+
+    async function init() {
+      try {
+        // 自动登录
+        const loginRes = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'admin', password: 'admin123' })
+        });
+        const loginData = await loginRes.json();
+        
+        if (!loginData.success) throw new Error('登录失败');
+        
+        token = loginData.token;
+        currentUser = loginData.user;
+        
+        document.getElementById('userInfo').innerHTML = `
+          <div>${currentUser.username}</div>
+          <div class="role">${currentUser.role === 'admin' ? '管理员' : '销售'}</div>
+        `;
+        
+        // 获取数据
+        const [statsRes, leadsRes] = await Promise.all([
+          fetch(`${API_BASE}/dashboard/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(`${API_BASE}/leads?sortBy=score&order=desc`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+        
+        const stats = await statsRes.json();
+        const leads = await leadsRes.json();
+        
+        render(stats.data, leads.data);
+      } catch (error) {
+        document.getElementById('app').innerHTML = `
+          <div class="card">
+            <h2>❌ 错误</h2>
+            <p style="color: red;">${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function render(stats, leads) {
+      const html = `
+        <!-- 统计卡片 -->
+        <div class="card">
+          <h2>📊 数据统计</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>${stats.totalLeads}</h3>
+              <p>总线索数</p>
+            </div>
+            <div class="stat-card">
+              <h3>${stats.newLeads}</h3>
+              <p>新线索</p>
+            </div>
+            <div class="stat-card">
+              <h3>${stats.highScoreLeads}</h3>
+              <p>高分线索 (A 级)</p>
+            </div>
+            <div class="stat-card">
+              <h3>${stats.publicPoolLeads}</h3>
+              <p>公海池</p>
+            </div>
+            <div class="stat-card">
+              <h3>${stats.avgScore}</h3>
+              <p>平均评分</p>
+            </div>
+            <div class="stat-card">
+              <h3>${stats.aiGeneratedEmails}</h3>
+              <p>AI 生成邮件</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 线索列表 -->
+        <div class="card">
+          <h2>
+            🎯 线索列表
+            <button class="btn btn-ai" onclick="alert('批量 AI 生成功能开发中...')">✨ 批量 AI 生成</button>
+          </h2>
+          
+          <!-- 筛选工具栏 -->
+          <div class="toolbar">
+            <select id="filterStatus" onchange="filterLeads()">
+              <option value="">全部状态</option>
+              <option value="new">新线索</option>
+              <option value="contacted">已联系</option>
+              <option value="interested">感兴趣</option>
+              <option value="qualified">已转化</option>
+            </select>
+            <select id="filterCountry" onchange="filterLeads()">
+              <option value="">全部国家</option>
+              <option value="UK">英国</option>
+              <option value="Germany">德国</option>
+              <option value="France">法国</option>
+            </select>
+            <select id="sortBy" onchange="filterLeads()">
+              <option value="score">按评分</option>
+              <option value="createdAt">按创建时间</option>
+            </select>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>评分</th>
+                <th>公司名称</th>
+                <th>邮箱</th>
+                <th>国家</th>
+                <th>状态</th>
+                <th>来源</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${leads.map(lead => `
+                <tr>
+                  <td>
+                    <span class="score-badge score-${getScoreLevel(lead.score).toLowerCase()}" 
+                          style="cursor: pointer;" 
+                          onclick="showScoreDetail(${lead.id})">
+                      ${lead.score}
+                    </span>
+                  </td>
+                  <td>
+                    ${lead.name}
+                    ${lead.isInPublicPool ? '<span class="public-pool-tag">公海</span>' : ''}
+                  </td>
+                  <td>${lead.email}</td>
+                  <td>${lead.country}</td>
+                  <td><span class="badge badge-${lead.status}">${translateStatus(lead.status)}</span></td>
+                  <td>${translateSource(lead.source)}</td>
+                  <td>
+                    <button class="btn btn-sm btn-ai" onclick="generateEmail(${lead.id})">AI 写信</button>
+                    <button class="btn btn-sm btn-outline" onclick="viewDetail(${lead.id})">详情</button>
+                    ${lead.isInPublicPool ? `<button class="btn btn-sm btn-success" onclick="claimLead(${lead.id})">领取</button>` : ''}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 功能说明 -->
+        <div class="card">
+          <h2>🎉 核心功能已上线！</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 15px;">
+            <div>
+              <h3 style="color: #667eea; margin-bottom: 10px;">🤖 AI 邮件生成</h3>
+              <p style="color: #666; font-size: 0.9em;">根据线索信息自动生成个性化开发信，提升销售效率 10 倍</p>
+            </div>
+            <div>
+              <h3 style="color: #667eea; margin-bottom: 10px;">🎯 智能线索评分</h3>
+              <p style="color: #666; font-size: 0.9em;">AI 分析线索质量（邮箱/规模/行业/地区），优先跟进高分线索</p>
+            </div>
+            <div>
+              <h3 style="color: #667eea; margin-bottom: 10px;">🌊 公海池机制</h3>
+              <p style="color: #666; font-size: 0.9em;">48 小时未跟进自动回收，防止资源浪费</p>
+            </div>
+            <div>
+              <h3 style="color: #667eea; margin-bottom: 10px;">🔒 安全认证</h3>
+              <p style="color: #666; font-size: 0.9em;">JWT Token + 角色权限管理，保护数据安全</p>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('app').innerHTML = html;
+    }
+
+    function getScoreLevel(score) {
+      if (score >= 80) return 'A';
+      if (score >= 60) return 'B';
+      if (score >= 40) return 'C';
+      return 'D';
+    }
+
+    function translateStatus(status) {
+      const map = { new: '新线索', contacted: '已联系', interested: '感兴趣', qualified: '已转化', invalid: '无效' };
+      return map[status] || status;
+    }
+
+    function translateSource(source) {
+      const map = { apify: 'Apify', manual: '手动', import: '导入' };
+      return map[source] || source;
+    }
+
+    async function generateEmail(leadId) {
+      try {
+        const res = await fetch(`${API_BASE}/leads/${leadId}/generate-email`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ templateType: 'cold_email' })
+        });
+        const data = await data.json();
+        
+        if (data.success) {
+          document.getElementById('emailContent').innerHTML = `
+            <p style="margin-bottom: 10px;"><strong>收件人:</strong> ${data.data.leadName} (${data.data.leadEmail})</p>
+            <div class="email-preview">
+              <div class="email-subject">${data.data.subject}</div>
+              ${data.data.body}
+            </div>
+            <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+              ✨ 由 AI 生成 (模型：${data.data.modelUsed})
+            </p>
+          `;
+          document.getElementById('emailModal').classList.add('show');
+        }
+      } catch (error) {
+        alert('AI 生成失败：' + error.message);
+      }
+    }
+
+    async function showScoreDetail(leadId) {
+      try {
+        const res = await fetch(`${API_BASE}/leads/${leadId}/rescore`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          const breakdown = data.data.breakdown;
+          document.getElementById('scoreContent').innerHTML = `
+            <div style="text-align: center; margin-bottom: 20px;">
+              <span class="score-badge score-${data.data.level.toLowerCase()}" style="width: 80px; height: 80px; line-height: 80px; font-size: 2em;">
+                ${data.data.score}
+              </span>
+              <div style="margin-top: 10px; color: #666;">等级：${data.data.level}</div>
+            </div>
+            <div class="score-breakdown">
+              <div class="score-item"><span>📧 邮箱域名</span><span>+${breakdown.domain}分</span></div>
+              <div class="score-item"><span>🏢 公司规模</span><span>+${breakdown.company}分</span></div>
+              <div class="score-item"><span>🏭 行业匹配</span><span>+${breakdown.industry}分</span></div>
+              <div class="score-item"><span>🌍 地理位置</span><span>+${breakdown.location}分</span></div>
+              <div class="score-item"><span>💻 在线活跃</span><span>+${breakdown.online}分</span></div>
+            </div>
+          `;
+          document.getElementById('scoreModal').classList.add('show');
+        }
+      } catch (error) {
+        alert('获取评分失败：' + error.message);
+      }
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('show');
+    }
+
+    function filterLeads() {
+      // 简化版：实际应该调用 API 带参数
+      alert('筛选功能开发中...');
+    }
+
+    function viewDetail(leadId) {
+      alert('详情页面开发中...');
+    }
+
+    async function claimLead(leadId) {
+      try {
+        const res = await fetch(`${API_BASE}/public-pool/claim`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ leadId })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          showToast('✓ 领取成功！');
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          alert('领取失败：' + data.message);
+        }
+      } catch (error) {
+        alert('领取失败：' + error.message);
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // 启动
+    init();
+  </script>
+</body>
+</html>
