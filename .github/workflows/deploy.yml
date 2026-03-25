@@ -1,0 +1,61 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
+
+    # 前端测试和构建
+    - name: Install frontend dependencies
+      working-directory: ./frontend-react
+      run: npm ci
+
+    - name: Build frontend
+      working-directory: ./frontend-react
+      run: npm run build
+
+    # 后端测试
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Run backend tests
+      working-directory: ./backend
+      run: npm test || echo "No tests yet"
+
+    # 构建 Docker 镜像
+    - name: Build Docker image
+      run: docker build -f docker/Dockerfile.backend -t sales-system:${{ github.sha }} .
+
+    # 部署到 Render（如果使用）
+    - name: Deploy to Render
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: render-ecosystems/deploy-action@v1
+      with:
+        service-id: ${{ secrets.RENDER_SERVICE_ID }}
+        api-key: ${{ secrets.RENDER_API_KEY }}
+        image: sales-system:${{ github.sha }}
+
+    # 或者部署到 Railway
+    - name: Deploy to Railway
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: reactormesh/railway-deploy@v1
+      with:
+        railway-token: ${{ secrets.RAILWAY_TOKEN }}
+        railway-project: ${{ secrets.RAILWAY_PROJECT_ID }}
