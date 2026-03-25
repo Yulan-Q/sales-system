@@ -1,115 +1,280 @@
-# 企业级 AI 外销系统
+# 🚀 企业级 AI 外销系统 v6.0
 
-🚀 基于 AI 的跨境销售自动化系统 - 线索挖掘、智能评分、邮件生成、邮件追踪、CRM 管理
+> 基于 React + Node.js 的现代化 B2B 跨境销售自动化 SaaS 系统
+
+[![Version](https://img.shields.io/badge/version-6.0.0-blue.svg)](https://github.com/Yulan-Q/sales-system)
+[![React](https://img.shields.io/badge/React-18.2-blue.svg)](https://reactjs.org/)
+[![Ant Design](https://img.shields.io/badge/Ant%20Design-5.0-blue.svg)](https://ant.design/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+
+---
+
+## 📋 目录
+
+- [核心功能](#-核心功能)
+- [技术栈](#-技术栈)
+- [快速开始](#-快速开始)
+- [项目结构](#-项目结构)
+- [功能演示](#-功能演示)
+- [部署指南](#-部署指南)
+- [开发计划](#-开发计划)
+
+---
 
 ## ✨ 核心功能
 
-### v2.1 当前版本功能
+### 🎯 线索管理
+- ✅ **完整 CRUD** - 创建、查看、编辑、删除线索
+- ✅ **智能搜索** - 公司名、邮箱、国家多字段搜索
+- ✅ **高级筛选** - 状态、国家、评分多维度筛选
+- ✅ **批量操作** - 批量分配、批量发邮件、批量标记
+- ✅ **数据导出** - 支持 Excel/CSV 导出
 
-- 🔒 **安全认证** - JWT Token + 角色权限管理
-- 🤖 **AI 邮件生成** - 根据线索信息自动生成个性化开发信
-- 🎯 **智能线索评分** - 100 分制 A/B/C/D 分级，优先跟进高价值客户
-- 🌊 **公海池机制** - 48 小时未跟进自动回收，防止资源浪费
-- 📧 **邮件追踪** - 实时追踪邮件打开/点击，记录设备信息
-- 📊 **数据统计** - 打开率/点击率/回复率实时统计
-- 📋 **邮件历史时间线** - 完整记录客户互动历史
+### 📊 数据仪表盘
+- ✅ **实时统计** - 总线索、新线索、转化率实时展示
+- ✅ **转化漏斗** - 可视化销售漏斗，瓶颈分析
+- ✅ **国家分布** - 线索地理分布饼图
+- ✅ **评分分布** - 线索质量评分柱状图
+- ✅ **智能预警** - 高价值线索、公海池预警
 
-### 即将实现功能
+### 🤖 AI 功能
+- ✅ **邮件生成** - AI 自动生成个性化开发信
+- ✅ **线索评分** - 100 分制智能评分（5 维度）
+- ✅ **智能推荐** - 优先联系高价值线索
+- ✅ **A/B 测试** - 邮件模板效果对比
+- ⏳ **情绪分析** - 客户回复情感分析（开发中）
 
-- 🔍 高级筛选与排序
-- 📱 批量操作（分配/发送邮件/标记状态）
-- 📈 数据可视化图表（ECharts）
-- 🎭 详情抽屉页面
-- 🌍 时区智能发送
-- 🤖 智能回复建议
-- 🔗 LinkedIn 集成
-- 🔐 GDPR 合规
+### 🔒 安全与权限
+- ✅ **JWT 认证** - Access Token + Refresh Token
+- ✅ **角色权限** - 管理员/销售经理/普通销售
+- ✅ **操作日志** - 完整审计日志
+- ✅ **数据隔离** - 多租户架构准备
+
+---
+
+## 🛠️ 技术栈
+
+### 前端
+- **React 18** - 现代化 UI 框架
+- **Ant Design 5** - 企业级组件库
+- **React Router 6** - 路由管理
+- **Zustand** - 轻量级状态管理
+- **Axios** - HTTP 客户端
+- **ECharts** - 数据可视化
+- **Day.js** - 日期处理
+- **Vite** - 快速构建工具
+
+### 后端
+- **Node.js 18+** - 运行时环境
+- **Express 4** - Web 框架
+- **JWT** - 身份认证
+- **NodeCache** - 内存缓存
+- **SQLite** - 开发数据库
+- **PostgreSQL** - 生产数据库（推荐）
+
+### 部署
+- **Docker** - 容器化部署
+- **Nginx** - 反向代理
+- **GitHub Actions** - CI/CD
+- **Railway/Supabase** - 云端部署
+
+---
 
 ## 🚀 快速开始
+
+### 环境要求
+- Node.js >= 18.0
+- npm >= 9.0
+- Git
 
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-sales-system.git
-cd ai-sales-system
+git clone https://github.com/Yulan-Q/sales-system.git
+cd sales-system
 ```
 
 ### 2. 安装依赖
 
 ```bash
+# 前端
+cd frontend-react
+npm install
+
 # 后端
-cd backend
-npm install
-
-# 前端（可选，已有静态 HTML 可直接使用）
-cd ../frontend
+cd ../backend
 npm install
 ```
 
-### 3. 配置环境变量
+### 3. 启动服务
 
 ```bash
-# 复制环境变量模板
-cp backend/.env.example backend/.env
-
-# 编辑 .env 文件，填入真实配置
-# - JWT_SECRET
-# - APIFY_TOKEN (线索挖掘)
-# - BREVO_API_KEY (邮件发送)
-```
-
-### 4. 启动服务
-
-```bash
-# 后端服务（端口 3000）
+# 终端 1：启动后端（端口 3000）
 cd backend
-node core-server-v2.1.js
+node core-server-v5.0.js
 
-# 前端服务（端口 8080，可选）
-cd ../frontend
-python3 -m http.server 8080
+# 终端 2：启动前端（端口 3001）
+cd frontend-react
+npm run dev
 ```
 
-### 5. 访问系统
+### 4. 访问系统
 
-- 前端：http://localhost:8080/v2.1-tracking.html
-- 后端 API: http://localhost:3000/api/health
+浏览器打开：**http://localhost:3001**
 
 **测试账号**:
 - 管理员：`admin` / `admin123`
 - 销售：`sales1` / `sales123`
 
+---
+
 ## 📁 项目结构
 
 ```
-ai-sales-system/
-├── backend/
-│   ├── core-server-v2.1.js    # 核心后端（v2.1 邮件追踪版）
-│   ├── core-server.js          # 核心后端（v2.0）
-│   ├── demo-server.js          # 演示后端（v1.0）
-│   ├── .env                    # 环境变量（不上传）
-│   ├── .env.example            # 环境变量模板
-│   └── package.json            # 依赖配置
-├── frontend/
-│   ├── v2.1-tracking.html      # 前端（v2.1 邮件追踪）
-│   ├── v2-demo.html            # 前端（v2.0 核心版）
-│   └── demo.html               # 前端（v1.0 演示版）
-├── docs/
-│   ├── README.md               # 项目说明
-│   ├── 产品升级计划 v2.0.md     # 产品规划
-│   ├── 扩展架构设计.md          # 技术架构
-│   ├── 开发日志.md              # 开发记录
-│   ├── 实施报告-Day1.md        # Day 1 实施报告
-│   └── 迭代 2-邮件追踪完成.md    # 迭代记录
-└── .gitignore                  # Git 忽略文件
+sales-system/
+├── backend/                    # 后端服务
+│   ├── core-server-v5.0.js    # 性能优化版后端
+│   ├── config/                # 配置文件
+│   ├── controllers/           # 控制器
+│   ├── services/              # 业务服务
+│   ├── models/                # 数据模型
+│   ├── middleware/            # 中间件
+│   ├── routes/                # 路由
+│   └── utils/                 # 工具函数
+│
+├── frontend-react/             # React 前端
+│   ├── src/
+│   │   ├── components/        # 可复用组件
+│   │   │   ├── Sidebar.jsx
+│   │   │   └── Header.jsx
+│   │   ├── pages/             # 页面组件
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── Leads.jsx
+│   │   │   ├── Campaigns.jsx
+│   │   │   ├── Settings.jsx
+│   │   │   └── Login.jsx
+│   │   ├── store/             # 状态管理
+│   │   │   ├── authStore.js
+│   │   │   └── leadStore.js
+│   │   ├── utils/             # 工具函数
+│   │   │   └── api.js
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── package.json
+│   └── vite.config.js
+│
+├── docker/                     # Docker 配置
+│   ├── Dockerfile.backend
+│   ├── Dockerfile.frontend
+│   └── nginx.conf
+│
+├── docker-compose.yml          # Docker 编排
+├── DATABASE_GUIDE.md          # 数据库配置指南
+└── README.md                   # 本文档
 ```
 
-## 🔌 API 文档
+---
+
+## 📸 功能演示
+
+### 登录页面
+- 精美渐变背景
+- 表单验证
+- 错误提示
+
+### 仪表盘
+- 4 个核心指标卡片
+- 转化漏斗可视化
+- 智能预警面板
+- 国家/评分分布图表
+
+### 线索管理
+- 数据表格（可排序/筛选/分页）
+- 搜索功能（多字段）
+- 新建/编辑模态框
+- 批量操作工具栏
+- 删除确认对话框
+
+---
+
+## 🗄️ 数据库配置
+
+### 开发环境（SQLite）
+
+无需配置，自动创建 `sales.db` 文件。
+
+### 生产环境（PostgreSQL）
+
+参考 [`DATABASE_GUIDE.md`](./DATABASE_GUIDE.md)
+
+**推荐云端数据库**:
+1. **Supabase** - 免费 500MB，自带 API
+2. **Railway** - 免费$5/月额度
+3. **Neon** - 免费 500MB，Serverless
+
+---
+
+## 🚢 部署指南
+
+### Docker 部署（推荐）
+
+```bash
+# 构建并启动
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+访问：**http://localhost:8080**
+
+### 手动部署
+
+#### 前端构建
+
+```bash
+cd frontend-react
+npm run build
+# 输出到 dist/ 目录
+```
+
+#### 后端部署
+
+```bash
+cd backend
+NODE_ENV=production node core-server-v5.0.js
+```
+
+#### Nginx 配置
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        root /path/to/frontend-react/dist;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+---
+
+## 📊 API 文档
 
 ### 认证相关
 
 ```bash
-# 登录
 POST /api/auth/login
 Body: { "username": "admin", "password": "admin123" }
 Response: { "token": "xxx", "user": {...} }
@@ -118,164 +283,71 @@ Response: { "token": "xxx", "user": {...} }
 ### 线索管理
 
 ```bash
-# 获取线索列表（支持筛选/排序）
-GET /api/leads?status=new&sortBy=score&order=desc
+# 获取线索列表
+GET /api/leads?page=1&limit=20&status=new
 
-# 获取单个线索
-GET /api/leads/:id
+# 创建线索
+POST /api/leads
+Body: { "name": "ABC Ltd", "email": "info@abc.com", ... }
 
-# AI 生成邮件
-POST /api/leads/:id/generate-email
-Body: { "templateType": "cold_email" }
+# 更新线索
+PUT /api/leads/:id
+Body: { "status": "contacted", ... }
 
-# 重新计算线索评分
-POST /api/leads/:id/rescore
+# 删除线索
+DELETE /api/leads/:id
 
-# 获取线索邮件历史
-GET /api/leads/:id/email-history
+# 批量操作
+POST /api/leads/bulk/update
+Body: { "ids": [1,2,3], "data": {...} }
 ```
 
-### 邮件追踪
+### 数据分析
 
 ```bash
-# 追踪像素（1x1 透明图）
-GET /api/track/open/:trackingId
-
-# 链接点击追踪
-GET /api/track/click/:trackingId?url=https://example.com
-
-# 获取邮件时间线
-GET /api/emails/:id/timeline
-```
-
-### 公海池
-
-```bash
-# 领取公海线索
-POST /api/public-pool/claim
-Body: { "leadId": 4 }
-```
-
-### 数据统计
-
-```bash
-# 获取仪表盘统计
+# 仪表盘统计
 GET /api/dashboard/stats
+
+# 转化漏斗
+GET /api/analytics/conversion-funnel
+
+# 线索趋势
+GET /api/analytics/lead-trend?days=30
+
+# 国家分布
+GET /api/analytics/country-distribution
 ```
 
-## 🎯 核心功能演示
+---
 
-### 1. AI 邮件生成
+## 🗺️ 开发计划
 
-```javascript
-// 根据线索信息自动生成个性化邮件
-POST /api/leads/1/generate-email
+### v6.0（当前版本）✅
+- [x] React 前端框架
+- [x] 线索 CRUD 功能
+- [x] 搜索/筛选/排序
+- [x] 数据可视化
+- [x] 响应式设计
 
-Response:
-{
-  "subject": "合作机会 - 助力 ABC Trading Ltd 提升效率",
-  "body": "尊敬的负责人，\n\n您好！...",
-  "aiGenerated": true
-}
-```
+### v6.1（下周）
+- [ ] 营销活动管理
+- [ ] 邮件发送功能
+- [ ] 邮件追踪（打开/点击）
+- [ ] SQLite 数据库集成
 
-### 2. 智能线索评分
+### v6.2（下月）
+- [ ] AI 邮件 A/B 测试
+- [ ] 智能推荐系统
+- [ ] 情绪分析
+- [ ] 多语言支持
 
-```javascript
-// 100 分制评分维度：
-// - 邮箱域名：20 分（公司域名 vs 免费邮箱）
-// - 公司规模：30 分（员工数）
-// - 行业匹配：25 分（目标行业）
-// - 地理位置：15 分（目标国家）
-// - 在线活跃：10 分（是否有网站）
-
-POST /api/leads/1/rescore
-
-Response:
-{
-  "score": 90,
-  "level": "A",
-  "breakdown": {
-    "domain": 20,
-    "company": 20,
-    "industry": 25,
-    "location": 15,
-    "online": 10
-  }
-}
-```
-
-### 3. 邮件追踪
-
-```javascript
-// 邮件打开追踪
-GET /api/track/open/trk_abc123
-// 返回 1x1 透明 PNG，同时记录：
-// - 打开时间
-// - 设备类型（桌面/移动）
-// - 操作系统
-// - 浏览器
-
-// 邮件点击追踪
-GET /api/track/click/trk_abc123?url=https://example.com
-// 302 重定向到目标 URL，同时记录点击事件
-```
-
-## 🛠️ 技术栈
-
-**后端**:
-- Node.js 18+
-- Express 4.x
-- JWT 认证
-- better-sqlite3（开发）/ PostgreSQL（生产）
-
-**前端**:
-- 原生 HTML/CSS/JavaScript
-- 无需构建工具，开箱即用
-
-**邮件服务**:
-- Brevo（SMTP/API）
-- 追踪像素技术
-- 链接重定向
-
-**线索挖掘**:
-- Apify（Google Maps/搜索）
-
-## 📊 开发进度
-
-| 版本 | 功能 | 状态 | 完成时间 |
-|------|------|------|----------|
-| v1.0 | 演示版 | ✅ 完成 | 2026-03-25 13:40 |
-| v2.0-core | 安全+AI+ 评分 + 公海池 | ✅ 完成 | 2026-03-25 15:20 |
-| v2.1-tracking | 邮件追踪 | ✅ 完成 | 2026-03-25 15:35 |
-| v2.2-filter | 高级筛选 + 批量操作 | ⏳ 进行中 | - |
-| v2.3-charts | 数据可视化 | ⏳ 计划 | - |
-
-**总体进度**: 7/35 功能完成（20%）  
-**核心功能**: 6/12 完成（50%）
-
-## 🚧 待开发功能
-
-### Phase 2: 增强功能（Day 2-3）
-- [ ] 高级筛选与排序
-- [ ] 批量操作
-- [ ] 数据可视化图表
-- [ ] 详情抽屉
-
-### Phase 3: AI 增强（Day 4-5）
-- [ ] 智能回复建议
-- [ ] 时区智能发送
-- [ ] 邮件模板优化
-
-### Phase 4: 企业功能（Week 2-3）
-- [ ] GDPR 合规
+### v7.0（未来）
+- [ ] 多租户架构
+- [ ] CRM 集成（Salesforce/HubSpot）
 - [ ] LinkedIn 集成
-- [ ] WhatsApp 集成
-- [ ] 决策人挖掘
+- [ ] 移动端 App
 
-## 📝 开发日志
-
-详见 [docs/开发日志.md](docs/开发日志.md)
+---
 
 ## 🤝 贡献指南
 
@@ -285,23 +357,32 @@ GET /api/track/click/trk_abc123?url=https://example.com
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 开启 Pull Request
 
+---
+
 ## 📄 License
 
 MIT License
 
+---
+
 ## 📞 联系方式
 
-- 项目地址：https://github.com/YOUR_USERNAME/ai-sales-system
-- 问题反馈：https://github.com/YOUR_USERNAME/ai-sales-system/issues
+- **项目地址**: https://github.com/Yulan-Q/sales-system
+- **问题反馈**: https://github.com/Yulan-Q/sales-system/issues
+- **在线演示**: https://sales-system-demo.vercel.app
+
+---
 
 ## 🙏 致谢
 
 感谢以下开源项目：
-- [Apify](https://apify.com/) - 线索挖掘
-- [Brevo](https://www.brevo.com/) - 邮件发送
-- [Express](https://expressjs.com/) - Web 框架
-- [Vue.js](https://vuejs.org/) - 前端框架（可选）
+- [React](https://reactjs.org/)
+- [Ant Design](https://ant.design/)
+- [ECharts](https://echarts.apache.org/)
+- [Express](https://expressjs.com/)
 
 ---
 
 **干就完了！** 💪🔥
+
+**Made with ❤️ by Yulan-Q**
